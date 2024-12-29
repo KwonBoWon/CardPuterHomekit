@@ -6,66 +6,133 @@
 #include "Adafruit_NeoPixel.h"
 #include "HomeSpan.h"
 #include "DEV_LED.h"
-#include "esp_log.h"
 
 #define PIN 21
 #define NUM_LEDS 1
 Adafruit_NeoPixel rgb21 = Adafruit_NeoPixel(NUM_LEDS , PIN , NEO_RGB + NEO_KHZ800);
+boolean isSwitching = false;
+int currentProc = 0;
+int currnetSelect = 0;
+char displayBuffer[5][20];
+String data = "";
 
-String cliBuffer = "";
-String displayBuffer = "";
+void setHomeUI(){
+    snprintf(displayBuffer[0], 20, "CardPuterHomekit");
+    snprintf(displayBuffer[1], 20, "WiFi");
+    snprintf(displayBuffer[2], 20, "PairingCode");
+    snprintf(displayBuffer[3], 20, "Device");
+    snprintf(displayBuffer[4], 20, "Setting");
+}
+void setWiFiUI(){
+    snprintf(displayBuffer[0], 20, "Back");
+    snprintf(displayBuffer[1], 20, "SSID");
+    snprintf(displayBuffer[2], 20, "");
+    snprintf(displayBuffer[3], 20, "PASSWORD");
+    snprintf(displayBuffer[4], 20, "");
+}
+void setPairingUI(){
+    snprintf(displayBuffer[0], 20, "Back");
+    snprintf(displayBuffer[1], 20, "ParinigCode");
+    snprintf(displayBuffer[2], 20, "");
+    snprintf(displayBuffer[3], 20, "QRID");
+    snprintf(displayBuffer[4], 20, "");
+}
+void drawDisplay(){
+    M5Cardputer.Display.clearDisplay();
+    M5Cardputer.Display.setCursor(0, 0);
+    char pre;
+    for(int i=0; i < 5; i++){
+        pre = (i==currnetSelect) ? '>' : '_';
+        M5Cardputer.Display.printf("%c%s\n", pre, displayBuffer[i]);
+    }
+}
+void homeLoop(){
+    if (M5Cardputer.Keyboard.isChange()) {
+        Serial.println("KeyCanged");
+        if (M5Cardputer.Keyboard.isPressed()) {
+            if(M5Cardputer.Keyboard.isKeyPressed(';')){
+                Serial.println("UP");
+                currnetSelect = currnetSelect>0 ? currnetSelect-1 : currnetSelect;                
+                Serial.println(currnetSelect);
+                drawDisplay();
+            }
+            else if(M5Cardputer.Keyboard.isKeyPressed('.')){
+                Serial.println("DOWN");
+                currnetSelect = currnetSelect<4 ? currnetSelect+1 : currnetSelect;
+                Serial.println(currnetSelect);
+                drawDisplay();
+            }
+            else if(M5Cardputer.Keyboard.isKeyPressed('KEY_ENTER')){
+                Serial.println("ENTER");
+                currentProc = currnetSelect;
+                isSwitching = true;
+                currentSelect = 0;
+            }
+        }
+    }
+}
+void wifiLoop(){
+    if (M5Cardputer.Keyboard.isChange()) {
+        Serial.println("KeyCanged");
+        if (M5Cardputer.Keyboard.isPressed()) {
+            if(M5Cardputer.Keyboard.isKeyPressed(';')){
+                Serial.println("UP");
+                currnetSelect = currnetSelect>0 ? currnetSelect-1 : currnetSelect;                
+                Serial.println(currnetSelect);
+                drawDisplay();
+            }
+            else if(M5Cardputer.Keyboard.isKeyPressed('.')){
+                Serial.println("DOWN");
+                currnetSelect = currnetSelect<4 ? currnetSelect+1 : currnetSelect;
+                Serial.println(currnetSelect);
+                drawDisplay();
+            }
+            else if(M5Cardputer.Keyboard.isKeyPressed('KEY_ENTER')){
+                Serial.println("ENTER");
+                currentProc = currnetSelect;
+            }
+        }
+    }
+}
+void paringLoop(){
 
-M5Canvas canvas(&M5Cardputer.Display);
-String data = "> ";
+}
 
-static char logBuffer[512];
-
-int customLogHandler(const char *format, va_list args) {
-  vsnprintf(logBuffer, sizeof(logBuffer), format, args);  // 로그 데이터를 문자열로 변환
-  Serial.print(logBuffer);                                // 시리얼 출력
-  M5Cardputer.Display.clearDisplay();                                         // 디스플레이 화면 초기화
-  M5Cardputer.Display.drawString(logBuffer, 10, 10);                   // 디스플레이 출력
-  return 0;
+void keyboardFuntion(){
+    if (M5Cardputer.Keyboard.isChange()) {
+        if (M5Cardputer.Keyboard.isPressed()) {
+            Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
+            for (auto i : status.word) {
+                data += i;
+            }
+            if (status.del) {
+                data.remove(data.length() - 1);
+            }
+            if (status.enter) {
+            }
+        }
+    }
 }
 
 void setup() {
     Serial.begin(115200); // W로 wifi세팅
 
-
     auto cfg = M5.config();
     M5Cardputer.begin(cfg);
     M5Cardputer.Display.setRotation(1);
     M5Cardputer.Display.setTextSize(0.5);
-    M5Cardputer.Display.setTextFont(&fonts::FreeSerifBold18pt7b);
-    
-    // outputrect
-    M5Cardputer.Display.drawRect(0, 0, M5Cardputer.Display.width(),
-                                 M5Cardputer.Display.height() - 28, GREEN);
-    M5Cardputer.Display.setTextFont(&fonts::FreeSerifBold18pt7b);
-    // inputrect
-    M5Cardputer.Display.fillRect(0, M5Cardputer.Display.height() - 4,
-                                 M5Cardputer.Display.width(), 4, GREEN);
-
-    canvas.setTextFont(&fonts::FreeSerifBold18pt7b);
-    canvas.setTextSize(0.5);
-
-    canvas.createSprite(M5Cardputer.Display.width() - 8,
-                        M5Cardputer.Display.height() - 36);
-    canvas.setTextScroll(true);
-    canvas.println("Welcome to CardputerHomekit");
-    canvas.pushSprite(4, 4);
-    
-    M5Cardputer.Display.drawString(data, 4, M5Cardputer.Display.height() - 24);
+    M5Cardputer.Display.setTextColor(TFT_GREEN);
+    M5Cardputer.Display.setTextFont(&fonts::FreeSans24pt7b); //FreeSerifBold18pt7b
     
     rgb21.begin();
     rgb21.setBrightness(255);
-
+    /*
     homeSpan.setPairingCode("11122333"); // 홈킷에 입력
     homeSpan.setQRID("111-22-333");
     homeSpan.begin(Category::Bridges, "Cardputer Bridge");
     
     // creates a web log on the URL /HomeSpan-[DEVICE-ID].local:[TCP-PORT]/myLog
-    homeSpan.enableWebLog(10,"pool.ntp.org","UTC","myLog");
+    //homeSpan.enableWebLog(10,"pool.ntp.org","UTC","myLog");
 
     new SpanAccessory(); // Bridge
     new Service::AccessoryInformation();
@@ -76,16 +143,50 @@ void setup() {
             new Characteristic::Identify();               
             new Characteristic::Name("RGB LED"); 
         new DEV_RgbLED();
-
-    esp_log_set_vprintf(customLogHandler);
-    esp_log_level_set("*", ESP_LOG_INFO);
-    ESP_LOGI("Example", "This is a log message!");
+    */
+    setHomeUI();
+    drawDisplay();
+    drawDisplay();
 }
 
 void loop() {
-    homeSpan.poll();
+    //homeSpan.poll();
     M5Cardputer.update();
-
+    if(isSwitching){
+        isSwitching = false;
+        switch(currentProc){
+            case 0: // Main menum
+                setHomeUI();
+                Serial.println("HomeUI");
+                break;
+            case 1: // Set Wifi
+                setWiFiUI();
+                break;
+            case 2: // Set paringcode
+                setPairingUI();
+                break;
+            case 3: // Setting
+                break;
+            default:
+                break;
+        }
+    }
+    switch(currentProc){
+        case 0:
+            homeLoop();
+            break;
+        case 1:
+            wifiLoop();
+            break;
+        case 2:
+            break;
+            paringLoop();
+        case 3:
+            break;
+        default:
+            break;
+    }
+    
     if (M5Cardputer.BtnA.wasPressed()) {
         M5Cardputer.Speaker.tone(8000, 20);
         rgb21.setPixelColor(0, rgb21.Color(0, 0, 0)); // Light off
