@@ -12,10 +12,16 @@
 Adafruit_NeoPixel rgb21 = Adafruit_NeoPixel(NUM_LEDS , PIN , NEO_RGB + NEO_KHZ800);
 boolean isSwitching = false;
 int currentProc = 0;
-int currnetSelect = 0;
+int currentSelect = 0;
 char displayBuffer[5][20];
-String data = "";
+String data = "> ";
 
+void removeLastChar(char* buffer) {
+    int length = strlen(buffer);
+    if (length > 0) {
+        buffer[length - 1] = '\0';
+    }
+}
 void setHomeUI(){
     snprintf(displayBuffer[0], 20, "CardPuterHomekit");
     snprintf(displayBuffer[1], 20, "WiFi");
@@ -42,29 +48,37 @@ void drawDisplay(){
     M5Cardputer.Display.setCursor(0, 0);
     char pre;
     for(int i=0; i < 5; i++){
-        pre = (i==currnetSelect) ? '>' : '_';
+        pre = (i==currentSelect) ? '>' : '_';
         M5Cardputer.Display.printf("%c%s\n", pre, displayBuffer[i]);
     }
 }
+void setWifi(){
+    homeSpan.setWifiCredentials(displayBuffer[2], displayBuffer[4]);
+    Serial.println(displayBuffer[2]);
+    Serial.println(displayBuffer[4]);
+}
+void setPairing(){
+
+}
 void homeLoop(){
     if (M5Cardputer.Keyboard.isChange()) {
-        Serial.println("KeyCanged");
+        Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
         if (M5Cardputer.Keyboard.isPressed()) {
             if(M5Cardputer.Keyboard.isKeyPressed(';')){
                 Serial.println("UP");
-                currnetSelect = currnetSelect>0 ? currnetSelect-1 : currnetSelect;                
-                Serial.println(currnetSelect);
+                currentSelect = currentSelect>0 ? currentSelect-1 : currentSelect;                
+                Serial.println(currentSelect);
                 drawDisplay();
             }
             else if(M5Cardputer.Keyboard.isKeyPressed('.')){
                 Serial.println("DOWN");
-                currnetSelect = currnetSelect<4 ? currnetSelect+1 : currnetSelect;
-                Serial.println(currnetSelect);
+                currentSelect = currentSelect<4 ? currentSelect+1 : currentSelect;
+                Serial.println(currentSelect);
                 drawDisplay();
             }
-            else if(M5Cardputer.Keyboard.isKeyPressed('KEY_ENTER')){
+            else if(status.enter){
                 Serial.println("ENTER");
-                currentProc = currnetSelect;
+                currentProc = currentSelect;
                 isSwitching = true;
                 currentSelect = 0;
             }
@@ -73,42 +87,106 @@ void homeLoop(){
 }
 void wifiLoop(){
     if (M5Cardputer.Keyboard.isChange()) {
-        Serial.println("KeyCanged");
         if (M5Cardputer.Keyboard.isPressed()) {
+            Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
             if(M5Cardputer.Keyboard.isKeyPressed(';')){
                 Serial.println("UP");
-                currnetSelect = currnetSelect>0 ? currnetSelect-1 : currnetSelect;                
-                Serial.println(currnetSelect);
+                currentSelect = currentSelect>0 ? currentSelect-1 : currentSelect;                
+                Serial.println(currentSelect);
                 drawDisplay();
             }
             else if(M5Cardputer.Keyboard.isKeyPressed('.')){
                 Serial.println("DOWN");
-                currnetSelect = currnetSelect<4 ? currnetSelect+1 : currnetSelect;
-                Serial.println(currnetSelect);
+                currentSelect = currentSelect<4 ? currentSelect+1 : currentSelect;
+                Serial.println(currentSelect);
                 drawDisplay();
             }
-            else if(M5Cardputer.Keyboard.isKeyPressed('KEY_ENTER')){
+            else if(status.enter){
                 Serial.println("ENTER");
-                currentProc = currnetSelect;
+                if (currentSelect == 0){
+                    currentProc = 0;
+                    isSwitching = true;
+                    currentSelect = 0;
+                    setPairing();
+                }
+                else if(currentSelect == 2){
+                    
+                }
+                else if(currentSelect == 4){
+                    setWifi();
+                }
+            }
+            else if (status.del) {
+                if (currentSelect == 2){
+                    removeLastChar(displayBuffer[2]);
+                    drawDisplay();
+                }
+                else if(currentSelect == 4){
+                    removeLastChar(displayBuffer[4]);
+                    drawDisplay();
+                }
+            }
+            else{
+                for (auto i : status.word) {
+                    if (currentSelect == 2){
+                        snprintf(displayBuffer[2] + strlen(displayBuffer[2]), 20, "%c", i);
+                        drawDisplay();
+                    }
+                    else if(currentSelect == 4){
+                        snprintf(displayBuffer[4] + strlen(displayBuffer[4]), 20, "%c", i);
+                        drawDisplay();
+                    }
+                }
             }
         }
     }
 }
 void paringLoop(){
-
-}
-
-void keyboardFuntion(){
     if (M5Cardputer.Keyboard.isChange()) {
         if (M5Cardputer.Keyboard.isPressed()) {
             Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
-            for (auto i : status.word) {
-                data += i;
+            if(M5Cardputer.Keyboard.isKeyPressed(';')){
+                Serial.println("UP");
+                currentSelect = currentSelect>0 ? currentSelect-1 : currentSelect;                
+                Serial.println(currentSelect);
+                drawDisplay();
             }
-            if (status.del) {
-                data.remove(data.length() - 1);
+            else if(M5Cardputer.Keyboard.isKeyPressed('.')){
+                Serial.println("DOWN");
+                currentSelect = currentSelect<4 ? currentSelect+1 : currentSelect;
+                Serial.println(currentSelect);
+                drawDisplay();
             }
-            if (status.enter) {
+            else if(status.enter){
+                Serial.println("ENTER");
+                if (currentSelect == 0){
+                    currentProc = 0;
+                    isSwitching = true;
+                    currentSelect = 0;
+                    setWifi();
+                }
+            }
+            else if (status.del) {
+                if (currentSelect == 2){
+                    removeLastChar(displayBuffer[2]);
+                    drawDisplay();
+                }
+                else if(currentSelect == 4){
+                    removeLastChar(displayBuffer[4]);
+                    drawDisplay();
+                }
+            }
+            else{
+                for (auto i : status.word) {
+                    if (currentSelect == 2){
+                        snprintf(displayBuffer[2] + strlen(displayBuffer[2]), 20, "%c", i);
+                        drawDisplay();
+                    }
+                    else if(currentSelect == 4){
+                        snprintf(displayBuffer[4] + strlen(displayBuffer[4]), 20, "%c", i);
+                        drawDisplay();
+                    }
+                }
             }
         }
     }
@@ -126,7 +204,7 @@ void setup() {
     
     rgb21.begin();
     rgb21.setBrightness(255);
-    /*
+    
     homeSpan.setPairingCode("11122333"); // 홈킷에 입력
     homeSpan.setQRID("111-22-333");
     homeSpan.begin(Category::Bridges, "Cardputer Bridge");
@@ -143,27 +221,32 @@ void setup() {
             new Characteristic::Identify();               
             new Characteristic::Name("RGB LED"); 
         new DEV_RgbLED();
-    */
+    
     setHomeUI();
     drawDisplay();
     drawDisplay();
 }
 
 void loop() {
-    //homeSpan.poll();
+    homeSpan.poll();
     M5Cardputer.update();
     if(isSwitching){
         isSwitching = false;
         switch(currentProc){
             case 0: // Main menum
                 setHomeUI();
+                drawDisplay();
                 Serial.println("HomeUI");
                 break;
             case 1: // Set Wifi
                 setWiFiUI();
+                drawDisplay();
+                Serial.println("WiFiUI");
                 break;
             case 2: // Set paringcode
                 setPairingUI();
+                drawDisplay();
+                Serial.println("ParingUI");
                 break;
             case 3: // Setting
                 break;
@@ -179,8 +262,8 @@ void loop() {
             wifiLoop();
             break;
         case 2:
-            break;
             paringLoop();
+            break;
         case 3:
             break;
         default:
