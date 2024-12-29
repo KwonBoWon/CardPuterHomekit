@@ -6,7 +6,7 @@
 #include "Adafruit_NeoPixel.h"
 #include "HomeSpan.h"
 #include "DEV_LED.h"
-
+// TODO 펑션키로 방향키 변경
 #define PIN 21
 #define NUM_LEDS 1
 Adafruit_NeoPixel rgb21 = Adafruit_NeoPixel(NUM_LEDS , PIN , NEO_RGB + NEO_KHZ800);
@@ -64,13 +64,13 @@ void homeLoop(){
     if (M5Cardputer.Keyboard.isChange()) {
         Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
         if (M5Cardputer.Keyboard.isPressed()) {
-            if(M5Cardputer.Keyboard.isKeyPressed(';')){
+            if(status.fn && M5Cardputer.Keyboard.isKeyPressed(';')){
                 Serial.println("UP");
                 currentSelect = currentSelect>0 ? currentSelect-1 : currentSelect;                
                 Serial.println(currentSelect);
                 drawDisplay();
             }
-            else if(M5Cardputer.Keyboard.isKeyPressed('.')){
+            else if(status.fn && M5Cardputer.Keyboard.isKeyPressed('.')){
                 Serial.println("DOWN");
                 currentSelect = currentSelect<4 ? currentSelect+1 : currentSelect;
                 Serial.println(currentSelect);
@@ -81,6 +81,7 @@ void homeLoop(){
                 currentProc = currentSelect;
                 isSwitching = true;
                 currentSelect = 0;
+                
             }
         }
     }
@@ -89,13 +90,13 @@ void wifiLoop(){
     if (M5Cardputer.Keyboard.isChange()) {
         if (M5Cardputer.Keyboard.isPressed()) {
             Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
-            if(M5Cardputer.Keyboard.isKeyPressed(';')){
+            if(status.fn && M5Cardputer.Keyboard.isKeyPressed(';')){
                 Serial.println("UP");
                 currentSelect = currentSelect>0 ? currentSelect-1 : currentSelect;                
                 Serial.println(currentSelect);
                 drawDisplay();
             }
-            else if(M5Cardputer.Keyboard.isKeyPressed('.')){
+            else if(status.fn && M5Cardputer.Keyboard.isKeyPressed('.')){
                 Serial.println("DOWN");
                 currentSelect = currentSelect<4 ? currentSelect+1 : currentSelect;
                 Serial.println(currentSelect);
