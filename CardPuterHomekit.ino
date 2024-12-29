@@ -38,9 +38,9 @@ void setWiFiUI(){
 }
 void setPairingUI(){
     snprintf(displayBuffer[0], 20, "Back");
-    snprintf(displayBuffer[1], 20, "ParinigCode");
+    snprintf(displayBuffer[1], 20, "ParinigCode(8numbers)");
     snprintf(displayBuffer[2], 20, "");
-    snprintf(displayBuffer[3], 20, "QRID");
+    snprintf(displayBuffer[3], 20, "QRID(8numbers)");
     snprintf(displayBuffer[4], 20, "");
 }
 void drawDisplay(){
@@ -58,7 +58,15 @@ void setWifi(){
     Serial.println(displayBuffer[4]);
 }
 void setPairing(){
-
+    homeSpan.setPairingCode(displayBuffer[2]);
+    Serial.println(displayBuffer[2]);
+}
+void setQRID(){
+    homeSpan.setQRID(displayBuffer[4]);
+    Serial.println(displayBuffer[4]);
+}
+void getDevice(){
+    homeSpan.statusString(HS_STATUS s);
 }
 void homeLoop(){
     if (M5Cardputer.Keyboard.isChange()) {
@@ -108,7 +116,6 @@ void wifiLoop(){
                     currentProc = 0;
                     isSwitching = true;
                     currentSelect = 0;
-                    setPairing();
                 }
                 else if(currentSelect == 2){
                     
@@ -164,7 +171,12 @@ void paringLoop(){
                     currentProc = 0;
                     isSwitching = true;
                     currentSelect = 0;
-                    setWifi();
+                }
+                else if(currentSelect == 2){
+                    setPairing();
+                }
+                else if(currentSelect == 4){
+                    setQRID();
                 }
             }
             else if (status.del) {
@@ -179,13 +191,15 @@ void paringLoop(){
             }
             else{
                 for (auto i : status.word) {
-                    if (currentSelect == 2){
-                        snprintf(displayBuffer[2] + strlen(displayBuffer[2]), 20, "%c", i);
-                        drawDisplay();
-                    }
-                    else if(currentSelect == 4){
-                        snprintf(displayBuffer[4] + strlen(displayBuffer[4]), 20, "%c", i);
-                        drawDisplay();
+                    if('0'<= i && i <= '9'){
+                        if (currentSelect == 2){
+                            snprintf(displayBuffer[2] + strlen(displayBuffer[2]), 20, "%c", i);
+                            drawDisplay();
+                        }
+                        else if(currentSelect == 4){
+                            snprintf(displayBuffer[4] + strlen(displayBuffer[4]), 20, "%c", i);
+                            drawDisplay();
+                        }
                     }
                 }
             }
@@ -206,8 +220,8 @@ void setup() {
     rgb21.begin();
     rgb21.setBrightness(255);
     
-    homeSpan.setPairingCode("11122333"); // 홈킷에 입력
-    homeSpan.setQRID("111-22-333");
+    //homeSpan.setPairingCode("11122333"); // 홈킷에 입력
+    //homeSpan.setQRID("111-22-333");
     homeSpan.begin(Category::Bridges, "Cardputer Bridge");
     
     // creates a web log on the URL /HomeSpan-[DEVICE-ID].local:[TCP-PORT]/myLog
