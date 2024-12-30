@@ -14,7 +14,6 @@ boolean isSwitching = false;
 int currentProc = 0;
 int currentSelect = 0;
 char displayBuffer[6][30];
-char statusBuffer[30];
 
 void removeLastChar(char* buffer) {
     int length = strlen(buffer);
@@ -66,7 +65,7 @@ void drawDisplay(){
         pre = (i==currentSelect) ? '>' : '_';
         M5Cardputer.Display.printf("%c%s\n", pre, displayBuffer[i]);
     }
-    M5Cardputer.Display.printf("*%s\n", pre, displayBuffer[5]); // status
+    M5Cardputer.Display.printf("@%s\n", displayBuffer[5]); // status
 }
 void setWifi(){
     homeSpan.setWifiCredentials(displayBuffer[2], displayBuffer[4]);
@@ -292,11 +291,13 @@ void settingLoop(){
         }
     }
 }
+
 void statusUpdate(HS_STATUS status){
     Serial.printf("\n*** HOMESPAN STATUS CHANGE: %s\n",homeSpan.statusString(status));
     snprintf(displayBuffer[5], 30, homeSpan.statusString(status));
     drawDisplay();
 }
+
 void setup() {
     Serial.begin(115200); // W로 wifi세팅
 
@@ -310,7 +311,7 @@ void setup() {
     rgb21.begin();
     rgb21.setBrightness(255);
     
-    //homeSpan.setStatusCallback(statusUpdate);   // set callback function
+    homeSpan.setStatusCallback(statusUpdate);   // set callback function
     homeSpan.begin(Category::Bridges, "Cardputer Bridge");
     
     // creates a web log on the URL /HomeSpan-[DEVICE-ID].local:[TCP-PORT]/Log
