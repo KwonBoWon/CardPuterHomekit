@@ -23,40 +23,48 @@ void removeLastChar(char* buffer) {
     }
 }
 void setHomeUI(){
-    snprintf(displayBuffer[0], 20, "CardPuterHomekit");
-    snprintf(displayBuffer[1], 20, "WiFi");
-    snprintf(displayBuffer[2], 20, "PairingCode");
-    snprintf(displayBuffer[3], 20, "Device");
-    snprintf(displayBuffer[4], 20, "Setting");
-}
-void setWiFiUI(){
-    snprintf(displayBuffer[0], 20, "Back");
-    snprintf(displayBuffer[1], 20, "SSID");
-    snprintf(displayBuffer[2], 20, "");
-    snprintf(displayBuffer[3], 20, "PASSWORD");
-    snprintf(displayBuffer[4], 20, "");
-}
-void setPairingUI(){
-    snprintf(displayBuffer[0], 20, "Back");
-    snprintf(displayBuffer[1], 20, "ParinigCode(8numbers)");
-    snprintf(displayBuffer[2], 20, "");
-    snprintf(displayBuffer[3], 20, "QRID(8numbers)");
-    snprintf(displayBuffer[4], 20, "");
+    snprintf(displayBuffer[0], 30, "CardPuterHomekit");
+    snprintf(displayBuffer[1], 30, "SET WiFi");
+    snprintf(displayBuffer[2], 30, "SET PairingCode");
+    snprintf(displayBuffer[3], 30, "");
+    snprintf(displayBuffer[4], 30, "SETTING");
 }
 void setTutorialUI(){
-    snprintf(displayBuffer[0], 20, "Back");
-    snprintf(displayBuffer[1], 20, "ParinigCode(8numbers)");
-    snprintf(displayBuffer[2], 20, "");
-    snprintf(displayBuffer[3], 20, "QRID(8numbers)");
-    snprintf(displayBuffer[4], 20, "");
+    snprintf(displayBuffer[0], 30, "Back");
+    snprintf(displayBuffer[1], 30, "1. Use Fn+arrows and Enter");
+    snprintf(displayBuffer[2], 30, "2. Set WiFi and Pairing Code");
+    snprintf(displayBuffer[3], 30, "3. Add Accessory");
+    snprintf(displayBuffer[4], 30, "4. Enter Pairing Code");
+}
+void setWiFiUI(){
+    snprintf(displayBuffer[0], 30, "Back");
+    snprintf(displayBuffer[1], 30, "SSID");
+    snprintf(displayBuffer[2], 30, "");
+    snprintf(displayBuffer[3], 30, "PASSWORD");
+    snprintf(displayBuffer[4], 30, "");
+}
+void setPairingUI(){
+    snprintf(displayBuffer[0], 30, "Back");
+    snprintf(displayBuffer[1], 30, "ParinigCode(8numbers)");
+    snprintf(displayBuffer[2], 30, "");
+    snprintf(displayBuffer[3], 30, "QRID(8numbers)");
+    snprintf(displayBuffer[4], 30, "");
+}
+void setWebLogUI(){
+    snprintf(displayBuffer[0], 30, "Back");
+    snprintf(displayBuffer[1], 30, "RECONNECT WiFi");
+    snprintf(displayBuffer[2], 30, "DELETE WiFi DATA");
+    snprintf(displayBuffer[3], 30, "DELETE HomeKit DATA");
+    snprintf(displayBuffer[4], 30, "ERASE ALL STORED DATA");
 }
 void setSettingUI(){
-    snprintf(displayBuffer[0], 20, "Back");
-    snprintf(displayBuffer[1], 20, "FACTORY RESET");
-    snprintf(displayBuffer[2], 20, "DELETE DATA");
-    snprintf(displayBuffer[3], 20, "RECONNECT WiFi");
-    snprintf(displayBuffer[4], 20, "RESTART");
+    snprintf(displayBuffer[0], 30, "Back");
+    snprintf(displayBuffer[1], 30, "RECONNECT WiFi");
+    snprintf(displayBuffer[2], 30, "DELETE WiFi DATA");
+    snprintf(displayBuffer[3], 30, "DELETE HomeKit DATA");
+    snprintf(displayBuffer[4], 30, "ERASE ALL STORED DATA");
 }
+
 void drawDisplay(){
     M5Cardputer.Display.clearDisplay();
     M5Cardputer.Display.setCursor(0, 0);
@@ -231,7 +239,7 @@ void setup() {
     M5Cardputer.Display.setRotation(1);
     M5Cardputer.Display.setTextSize(0.5);
     M5Cardputer.Display.setTextColor(TFT_GREEN);
-    M5Cardputer.Display.setTextFont(&fonts::FreeSans18pt7b); //FreeSans24pt7b
+    M5Cardputer.Display.setTextFont(&fonts::FreeSans18pt7b); // 
     
     rgb21.begin();
     rgb21.setBrightness(255);
@@ -239,8 +247,8 @@ void setup() {
     homeSpan.setStatusCallback(statusUpdate);   // set callback function
     homeSpan.begin(Category::Bridges, "Cardputer Bridge");
     
-    // creates a web log on the URL /HomeSpan-[DEVICE-ID].local:[TCP-PORT]/myLog
-    //homeSpan.enableWebLog(10,"pool.ntp.org","UTC","myLog");
+    // creates a web log on the URL /HomeSpan-[DEVICE-ID].local:[TCP-PORT]/Log
+    //homeSpan.enableWebLog(10,"pool.ntp.org","UTC","Log");
 
     new SpanAccessory(); // Bridge
     new Service::AccessoryInformation();
@@ -254,7 +262,7 @@ void setup() {
     
     setHomeUI();
     drawDisplay();
-    drawDisplay();
+
 }
 
 void loop() {
@@ -268,7 +276,7 @@ void loop() {
                 drawDisplay();
                 Serial.println("HomeUI");
                 break;
-            case 1: // Set Wifi
+            case 2: // Set Wifi
                 setWiFiUI();
                 drawDisplay();
                 Serial.println("WiFiUI");
