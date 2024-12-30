@@ -6,7 +6,7 @@
 #include "Adafruit_NeoPixel.h"
 #include "HomeSpan.h"
 #include "DEV_LED.h"
-// TODO 장치 컨트롤 버튼 임의로 지정해서 사용, 사용자 정의함수
+
 #define PIN 21
 #define NUM_LEDS 1
 Adafruit_NeoPixel rgb21 = Adafruit_NeoPixel(NUM_LEDS , PIN , NEO_RGB + NEO_KHZ800);
@@ -114,6 +114,33 @@ void homeLoop(){
         }
     }
 }
+void tutorialLoop(){
+    if (M5Cardputer.Keyboard.isChange()) {
+        Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
+        if (M5Cardputer.Keyboard.isPressed()) {
+            if(status.fn && M5Cardputer.Keyboard.isKeyPressed(';')){
+                Serial.println("UP");
+                currentSelect = currentSelect>0 ? currentSelect-1 : currentSelect;                
+                Serial.println(currentSelect);
+                drawDisplay();
+            }
+            else if(status.fn && M5Cardputer.Keyboard.isKeyPressed('.')){
+                Serial.println("DOWN");
+                currentSelect = currentSelect<4 ? currentSelect+1 : currentSelect;
+                Serial.println(currentSelect);
+                drawDisplay();
+            }
+            else if(status.enter){
+                Serial.println("ENTER");
+                if (currentSelect == 0){
+                    currentProc = 0;
+                    isSwitching = true;
+                    currentSelect = 0;
+                }
+            }
+        }
+    }
+}
 void wifiLoop(){
     if (M5Cardputer.Keyboard.isChange()) {
         if (M5Cardputer.Keyboard.isPressed()) {
@@ -136,9 +163,6 @@ void wifiLoop(){
                     currentProc = 0;
                     isSwitching = true;
                     currentSelect = 0;
-                }
-                else if(currentSelect == 2){
-                    
                 }
                 else if(currentSelect == 4){
                     setWifi();
@@ -226,6 +250,55 @@ void paringLoop(){
         }
     }
 }
+void settingLoop(){
+    if (M5Cardputer.Keyboard.isChange()) {
+        Keyboard_Class::KeysState status = M5Cardputer.Keyboard.keysState();
+        if (M5Cardputer.Keyboard.isPressed()) {
+            if(status.fn && M5Cardputer.Keyboard.isKeyPressed(';')){
+                Serial.println("UP");
+                currentSelect = currentSelect>0 ? currentSelect-1 : currentSelect;                
+                Serial.println(currentSelect);
+                drawDisplay();
+            }
+            else if(status.fn && M5Cardputer.Keyboard.isKeyPressed('.')){
+                Serial.println("DOWN");
+                currentSelect = currentSelect<4 ? currentSelect+1 : currentSelect;
+                Serial.println(currentSelect);
+                drawDisplay();
+            }
+            else if(status.enter){
+                Serial.println("ENTER");
+                if (currentSelect == 0){
+                    currentProc = 0;
+                    isSwitching = true;
+                    currentSelect = 0;
+                }
+                /*
+                    snprintf(displayBuffer[1], 30, "RECONNECT WiFi");
+                    snprintf(displayBuffer[2], 30, "DELETE WiFi DATA");
+                    snprintf(displayBuffer[3], 30, "DELETE HomeKit DATA");
+                    snprintf(displayBuffer[4], 30, "ERASE ALL STORED DATA");
+                */
+                if (currentSelect == 1){
+                    homeSpan.processSerialCommand("D");
+                    Serial.println("RECONNECT WiFi");
+                }
+                if (currentSelect == 2){
+                    homeSpan.processSerialCommand("X");
+                    Serial.println("DELETE WiFi DATA");
+                }
+                if (currentSelect == 3){
+                    homeSpan.processSerialCommand("H");
+                    Serial.println("DELETE HomeKit DATA");
+                }
+                if (currentSelect == 4){
+                    homeSpan.processSerialCommand("E");
+                    Serial.println("ERASE ALL STORED DATA");
+                }
+            }
+        }
+    }
+}
 void statusUpdate(HS_STATUS status){
     Serial.printf("\n*** HOMESPAN STATUS CHANGE: %s\n",homeSpan.statusString(status));
     snprintf(displayBuffer[5], 30, homeSpan.statusString(status));
@@ -244,7 +317,7 @@ void setup() {
     rgb21.begin();
     rgb21.setBrightness(255);
     
-    homeSpan.setStatusCallback(statusUpdate);   // set callback function
+    //homeSpan.setStatusCallback(statusUpdate);   // set callback function
     homeSpan.begin(Category::Bridges, "Cardputer Bridge");
     
     // creates a web log on the URL /HomeSpan-[DEVICE-ID].local:[TCP-PORT]/Log
@@ -268,6 +341,7 @@ void setup() {
 void loop() {
     homeSpan.poll();
     M5Cardputer.update();
+    
     if(isSwitching){
         isSwitching = false;
         switch(currentProc){
@@ -276,17 +350,25 @@ void loop() {
                 drawDisplay();
                 Serial.println("HomeUI");
                 break;
+            case 1:
+                setTutorialUI();
+                drawDisplay();
+                Serial.println("TutorialUI");
+                break;
             case 2: // Set Wifi
                 setWiFiUI();
                 drawDisplay();
                 Serial.println("WiFiUI");
                 break;
-            case 2: // Set paringcode
+            case 3: // Set paringcode
                 setPairingUI();
                 drawDisplay();
                 Serial.println("ParingUI");
                 break;
-            case 3: // Setting
+            case 4: // Setting
+                setSettingUI();
+                drawDisplay();
+                Serial.println("WiFiUI");
                 break;
             default:
                 break;
@@ -297,12 +379,16 @@ void loop() {
             homeLoop();
             break;
         case 1:
-            wifiLoop();
+            tutorialLoop();
             break;
         case 2:
-            paringLoop();
+            wifiLoop();
             break;
         case 3:
+            paringLoop();
+            break;
+        case 4:
+            settingLoop();
             break;
         default:
             break;
@@ -313,4 +399,5 @@ void loop() {
         rgb21.setPixelColor(0, rgb21.Color(0, 0, 0)); // Light off
         rgb21.show();
     }
+    
 }
