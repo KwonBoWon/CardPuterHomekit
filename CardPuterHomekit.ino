@@ -24,9 +24,9 @@ void removeLastChar(char* buffer) {
 }
 void setHomeUI(){
     snprintf(displayBuffer[0], 30, "CardPuterHomekit");
-    snprintf(displayBuffer[1], 30, "SET WiFi");
-    snprintf(displayBuffer[2], 30, "SET PairingCode");
-    snprintf(displayBuffer[3], 30, "");
+    snprintf(displayBuffer[1], 30, "Tutorial");
+    snprintf(displayBuffer[2], 30, "SET WiFi");
+    snprintf(displayBuffer[3], 30, "SET PairingCode");
     snprintf(displayBuffer[4], 30, "SETTING");
 }
 void setTutorialUI(){
@@ -49,13 +49,6 @@ void setPairingUI(){
     snprintf(displayBuffer[2], 30, "");
     snprintf(displayBuffer[3], 30, "QRID(8numbers)");
     snprintf(displayBuffer[4], 30, "");
-}
-void setWebLogUI(){
-    snprintf(displayBuffer[0], 30, "Back");
-    snprintf(displayBuffer[1], 30, "RECONNECT WiFi");
-    snprintf(displayBuffer[2], 30, "DELETE WiFi DATA");
-    snprintf(displayBuffer[3], 30, "DELETE HomeKit DATA");
-    snprintf(displayBuffer[4], 30, "ERASE ALL STORED DATA");
 }
 void setSettingUI(){
     snprintf(displayBuffer[0], 30, "Back");
@@ -368,7 +361,7 @@ void loop() {
             case 4: // Setting
                 setSettingUI();
                 drawDisplay();
-                Serial.println("WiFiUI");
+                Serial.println("SettingUI");
                 break;
             default:
                 break;
